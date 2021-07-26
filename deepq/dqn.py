@@ -216,8 +216,11 @@ class DQN(OffPolicyRLModel):
                     action = self.act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
                 env_action = action
                 reset = False
-                new_obs, rew, done, info = self.env.step(env_action)
-
+                try:
+                    new_obs, rew, done, info = self.env.step(env_action)
+                except:
+                    input('Something went wrong. Restart your environment to continue...')
+                    done = True
                 self.num_timesteps += 1
 
                 # Stop training if return value is False
