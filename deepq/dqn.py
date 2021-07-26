@@ -342,6 +342,39 @@ class DQN(OffPolicyRLModel):
 
         return actions, q_values
 
+    def learn_from_sample(self, obs, action, new_obs, rew, done, info):
+        obs_, new_obs_, reward_ = obs, new_obs, rew
+        # Store transition in the replay buffer.
+        self.replay_buffer_add(obs_, action, reward_, new_obs_, done, info)
+        obs = new_obs
+        # Save the unnormalized observation
+        if self._vec_normalize_env is not None:
+            obs_ = new_obs_
+
+        # Do not train if the warmup phase is not over
+        # or if there are not enough samples in the replay buffer
+        can_sample = self.replay_buffer.can_sample(self.batch_size)
+        if can_sample and self.num_timesteps > self.learning_starts \
+                and self.num_timesteps % self.train_freq == 0:
+
+            # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
+            # pytype:disable=bad-unpacking
+            obses_t, actions, rewards, obses_tp1, dones = self.replay_buffer.sample(self.batch_size,
+                                                                                    env=self._vec_normalize_env)
+            weights, batch_idxes = np.ones_like(rewards), None
+            # pytype:enable=bad-unpacking
+            _, td_errors = self._train_step(obses_t, actions, rewards, obses_tp1, obses_tp1, dones, weights,
+                                            sess=self.sess)
+
+            callback.on_rollout_start()
+
+        if can_sample and self.num_timesteps > self.learning_starts and \
+                self.num_timesteps % self.target_network_update_freq == 0:
+            # Update target network periodically.
+            self.update_target(sess=self.sess)
+
+        return self
+
     def action_probability(self, observation, state=None, mask=None, actions=None, logp=False):
         observation = np.array(observation)
         vectorized_env = self._is_vectorized_observation(observation, self.observation_space)
