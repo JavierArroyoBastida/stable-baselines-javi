@@ -407,7 +407,11 @@ class SAC(OffPolicyRLModel):
 
                 assert action.shape == self.env.action_space.shape
 
-                new_obs, reward, done, info = self.env.step(unscaled_action)
+                try:
+                    new_obs, reward, done, info = self.env.step(unscaled_action)
+                except:
+                    input('Something went wrong. Restart your environment to continue...')
+                    done = True
 
                 self.num_timesteps += 1
 
