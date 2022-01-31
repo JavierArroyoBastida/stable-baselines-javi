@@ -343,6 +343,7 @@ class DQN(OffPolicyRLModel):
         return actions, q_values
 
     def learn_from_sample(self, obs, action, new_obs, rew, done, info):
+        self.num_timesteps += 1
         obs_, new_obs_, reward_ = obs, new_obs, rew
         # Store transition in the replay buffer.
         self.replay_buffer_add(obs_, action, reward_, new_obs_, done, info)
@@ -365,8 +366,6 @@ class DQN(OffPolicyRLModel):
             # pytype:enable=bad-unpacking
             _, td_errors = self._train_step(obses_t, actions, rewards, obses_tp1, obses_tp1, dones, weights,
                                             sess=self.sess)
-
-            callback.on_rollout_start()
 
         if can_sample and self.num_timesteps > self.learning_starts and \
                 self.num_timesteps % self.target_network_update_freq == 0:

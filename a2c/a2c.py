@@ -358,7 +358,11 @@ class A2CRunner(AbstractEnvRunner):
             # Clip the actions to avoid out of bound error
             if isinstance(self.env.action_space, gym.spaces.Box):
                 clipped_actions = np.clip(actions, self.env.action_space.low, self.env.action_space.high)
-            obs, rewards, dones, infos = self.env.step(clipped_actions)
+            try:
+                obs, rewards, dones, infos = self.env.step(clipped_actions)
+            except:
+                input('Something went wrong. Restart your environment to continue...')
+                done = True
 
             self.model.num_timesteps += self.n_envs
 

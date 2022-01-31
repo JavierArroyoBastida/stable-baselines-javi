@@ -153,7 +153,10 @@ def generate_expert_traj(model, save_path=None, env=None, n_timesteps=0,
         observations = np.array(observations)
 
     if isinstance(env.action_space, spaces.Box):
-        actions = np.concatenate(actions).reshape((-1,) + env.action_space.shape)
+        try: 
+            actions = np.concatenate(actions).reshape((-1,) + env.action_space.shape)
+        except:
+            actions = np.array(actions).reshape((-1,) + env.action_space.shape)
     elif isinstance(env.action_space, spaces.Discrete):
         actions = np.array(actions).reshape((-1, 1))
 
